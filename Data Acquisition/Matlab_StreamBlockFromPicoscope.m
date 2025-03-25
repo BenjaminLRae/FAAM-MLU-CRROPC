@@ -207,7 +207,11 @@ invoke(streamingGroupObj, 'setBuffer', channelB, pAppBufferChB, appBufferSize);
 % is displayed in the final (second) plot.
 
 % Prompt User to indicate if they wish to plot live streaming data.
-plotLiveData = questionDialog('Plot live streaming data?', 'Streaming Data Plot');
+%plotLiveData = questionDialog('Plot live streaming data?', 'Streaming Data Plot');
+
+% Override prompt, we don't want to display live streaming data - it causes
+% data loss (or seems to with high sample rates/times).
+plotLiveData = PicoConstants.FALSE;
 
 if(plotLiveData == PicoConstants.TRUE)
    
@@ -460,28 +464,46 @@ delete(ps2000DeviceObj);
 
 %% Create data table
 
-dataTable = table(transpose(time), bufferChA, bufferChB);
+saveDataPrompt = questionDialog('Save data acquisition?', 'Prompt');
 
-varNames = ["time","channelAData","channelBData"];
-varUnits = ["s","mV","mV"];
+if saveDataPrompt == 1
 
-dataTable.Properties.VariableNames = varNames;
-dataTable.Properties.VariableUnits = varUnits;
+    dataTable = table(transpose(time), bufferChA, bufferChB);
 
-prompt = {'Enter channel A detector:','Enter channel B detector:'};
-dlgtitle = 'Enter detector types';
-fieldsize = [1 45; 1 45];
-definput = {'original_A','APD440A2'};
-answer = inputdlg(prompt,dlgtitle,fieldsize,definput);
+    varNames = ["time","channelAData","channelBData"];
+    varUnits = ["s","mV","mV"];
+    
+    dataTable.Properties.VariableNames = varNames;
+    dataTable.Properties.VariableUnits = varUnits;
+    
+    prompt = {'Enter channel A detector:','Enter channel B detector:'};
+    dlgtitle = 'Enter detector types';
+    fieldsize = [1 45; 1 45];
+    definput = {'original_A','APD440A2'};
+    answer = inputdlg(prompt,dlgtitle,fieldsize,definput);
+    
+    dataTable = addprop(dataTable,["Instrument","SamplingInterval","TotalSampleTime","TotalSamples","Range"],["variable","table","table","table","variable"]);
+    dataTable.Properties.CustomProperties.Instrument = ["",answer{1},answer{2}];
+    dataTable.Properties.CustomProperties.SamplingInterval = samplingIntervalMs * 1000;
+    dataTable.Properties.CustomProperties.TotalSampleTime = totalSamplingTime;
+    dataTable.Properties.CustomProperties.TotalSamples = totalSamples;
+    dataTable.Properties.CustomProperties.Range = ["",chARangeMv,chBRangeMv];
 
-dataTable = addprop(dataTable,["Instrument","SamplingInterval","TotalSampleTime","TotalSamples","Range"],["variable","table","table","table","variable"]);
-dataTable.Properties.CustomProperties.Instrument = ["",answer{1},answer{2}];
-dataTable.Properties.CustomProperties.SamplingInterval = samplingIntervalMs * 1000;
-dataTable.Properties.CustomProperties.TotalSampleTime = totalSamplingTime;
-dataTable.Properties.CustomProperties.TotalSamples = totalSamples;
-dataTable.Properties.CustomProperties.Range = ["",chARangeMv,chBRangeMv];
+    DateStrings = datetime();
+    infmt = 'MM-dd__HH-mm_';
+    t = datetime(DateStrings,'InputFormat',infmt,'Format',infmt);
+    
+    filename = strcat('G:\My Drive\PCASP\Data Captures\',string(t),'Pscope_Stream_SampIntv_',num2str(samplingIntervalMs*1000000),'us_SampTime_',num2str(totalSamplingTime),'s_ChA_',answer{1},'_ChB_',answer{2});
+    
+    writetable(dataTable,strcat(filename,'.csv'));
+    save(strcat(filename,'.mat'));
 
-filename = strcat('G:\My Drive\PCASP\Data Captures\','Pscope_Stream_SampIntv_',num2str(samplingIntervalMs*1000000),'us_SampTime_',num2str(totalSamplingTime),'s_ChA_',answer{1},'_ChB_',answer{2});
+    disp(strcat('Data saved to: ', filename));    
 
-writetable(dataTable,strcat(filename,'.csv'));
-save(strcat(filename,'.mat'));
+else
+
+    disp("Data wasn't saved. If this was a mistake, it should still be in the workspace so can be saved manually.");
+
+end
+
+
