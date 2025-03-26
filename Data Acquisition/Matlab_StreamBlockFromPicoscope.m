@@ -480,10 +480,10 @@ if saveDataPrompt == 1
     dlgtitle = 'Enter detector types';
     fieldsize = [1 45; 1 45];
     definput = {'original_A','APD440A2'};
-    answer = inputdlg(prompt,dlgtitle,fieldsize,definput);
+    detectors = inputdlg(prompt,dlgtitle,fieldsize,definput);
     
     dataTable = addprop(dataTable,["Instrument","SamplingInterval","TotalSampleTime","TotalSamples","Range"],["variable","table","table","table","variable"]);
-    dataTable.Properties.CustomProperties.Instrument = ["",answer{1},answer{2}];
+    dataTable.Properties.CustomProperties.Instrument = ["",detectors{1},detectors{2}];
     dataTable.Properties.CustomProperties.SamplingInterval = samplingIntervalMs * 1000;
     dataTable.Properties.CustomProperties.TotalSampleTime = totalSamplingTime;
     dataTable.Properties.CustomProperties.TotalSamples = totalSamples;
@@ -493,7 +493,7 @@ if saveDataPrompt == 1
     infmt = 'MM-dd__HH-mm_';
     t = datetime(DateStrings,'InputFormat',infmt,'Format',infmt);
     
-    filename = strcat('G:\My Drive\PCASP\Data Captures\',string(t),'Pscope_Stream_SampIntv_',num2str(samplingIntervalMs*1000000),'us_SampTime_',num2str(totalSamplingTime),'s_ChA_',answer{1},'_ChB_',answer{2});
+    filename = strcat('G:\My Drive\PCASP\Data Captures\',string(t),'Pscope_Stream_SampIntv_',num2str(samplingIntervalMs*1000000),'us_SampTime_',num2str(totalSamplingTime),'s_ChA_',detectors{1},'_ChB_',detectors{2});
     
     writetable(dataTable,strcat(filename,'.csv'));
     save(strcat(filename,'.mat'));
