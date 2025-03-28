@@ -45,6 +45,7 @@
 
 clc;
 close all;
+clear;
 
 %% Load Configuration Information
 
@@ -464,6 +465,14 @@ delete(ps2000DeviceObj);
 
 %% Create data table
 
+detectors = {'original_A','APD440A2'};
+
+DateStrings = datetime();
+infmt = 'MM-dd__HH-mm_';
+t = datetime(DateStrings,'InputFormat',infmt,'Format',infmt);
+
+filename = strcat('G:\My Drive\PCASP\Data Captures\',string(t),'Pscope_Stream_SampIntv_',num2str(samplingIntervalMs*1000000),'us_SampTime_',num2str(totalSamplingTime),'s_ChA_',detectors{1},'_ChB_',detectors{2});
+
 saveDataPrompt = questionDialog('Save data acquisition?', 'Prompt');
 
 if saveDataPrompt == 1
@@ -489,11 +498,6 @@ if saveDataPrompt == 1
     dataTable.Properties.CustomProperties.TotalSamples = totalSamples;
     dataTable.Properties.CustomProperties.Range = ["",chARangeMv,chBRangeMv];
 
-    DateStrings = datetime();
-    infmt = 'MM-dd__HH-mm_';
-    t = datetime(DateStrings,'InputFormat',infmt,'Format',infmt);
-    
-    filename = strcat('G:\My Drive\PCASP\Data Captures\',string(t),'Pscope_Stream_SampIntv_',num2str(samplingIntervalMs*1000000),'us_SampTime_',num2str(totalSamplingTime),'s_ChA_',detectors{1},'_ChB_',detectors{2});
     
     writetable(dataTable,strcat(filename,'.csv'));
     save(strcat(filename,'.mat'));

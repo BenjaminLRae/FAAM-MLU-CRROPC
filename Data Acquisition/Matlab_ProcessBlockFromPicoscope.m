@@ -150,7 +150,7 @@ end
 
 %% Thresholding for Channel B
 
-threshold_mV_chB = -266;
+threshold_mV_chB = -283;
 
 flag_OverThreshold = false;
 flag_UnderThreshold = true;

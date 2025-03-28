@@ -150,7 +150,7 @@ end
 
 %% Thresholding for Channel B
 
-threshold_mV_chB = -266;
+threshold_mV_chB = -283;
 
 flag_OverThreshold = false;
 flag_UnderThreshold = true;
@@ -367,18 +367,28 @@ end
 
 %% Plot histograms
 
-subplot(2,3,2);
+subplot(2,3,4);
 
 hChA = histogram(particleInteractionsPeakHeightsChA_W,64);
 xlabel('Interaction peak light power level (W)');
 title('Histogram - peak power - Channel A, 64 bins');
+ylim([0 4000]);
 grid on;
 
 subplot(2,3,5);
 
-hChA_D = histogram(particleInteractionsEstimatedDiameterChA);
+hChA_D = histogram(particleInteractionsEstimatedDiameterChA,16);
 xlabel('Estimated particle diameter (um)');
 title(strcat("Histogram - est. diameter - Channel A, ",num2str(hChA_D.NumBins)," bins"));
+ylim([0 4000]);
+grid on;
+
+subplot(2,3,6);
+
+hChB = histogram(abs(particleInteractionsPeakHeightsChB),64);
+xlabel('Interaction peak voltage (mV)');
+title('Histogram - peak voltages - Channel B, 64 bins');
+ylim([0 1000]);
 grid on;
 
 %% Calculate normalised concentration for ChA light power
@@ -396,12 +406,13 @@ for i = 1:hChA.NumBins
 
 end
 
-subplot(2,3,3);
+subplot(2,3,2);
 
 plot(xPowerValuesChA,dNdLogDchA,"square-");
 title("Light power distribution of particles - Ch A, 64 Bins, 10s");
 xlabel('Interaction peak light power (W)');
 ylabel('dN/dlogW (cm^-^3)')
+ylim([0 10e4]);
 xscale log;
 % yscale log;
 grid on;
@@ -421,32 +432,59 @@ for i = 1:hChA_D.NumBins
 
 end
 
-subplot(2,3,6);
+subplot(2,3,2);
 
 plot(abs(xDiameterValuesChA_D),abs(dNdLogDchA_D),"square-");
 title(strcat("Norm. concentration ChA, ",num2str(hChA_D.NumBins)," bins"));
 xlabel('Estimated particle diameter (um)');
 ylabel('dN/dlogD (cm^-^3)')
 xscale log;
+ylim([0 4e4]);
+% yscale log;
+grid on;
+
+%% Calculate normalised concentration for ChB
+
+dNdLogDchB = [];
+xVoltageValuesChB = [];
+
+for i = 1:hChB.NumBins
+
+    xVoltageValuesChB(i) = hChB.BinEdges(i) + ((hChB.BinEdges(i+1) - hChB.BinEdges(i))/2);
+    
+    dN = hChB.Values(i);
+    dlogD = log(hChB.BinEdges(i+1)) - log(hChB.BinEdges(i));
+    dNdLogDchB(i) = dN / dlogD;
+
+end
+
+subplot(2,3,3);
+
+plot(abs(xVoltageValuesChB),abs(dNdLogDchB),"square-");
+title("Voltage distribution of particles - Ch B, 64 Bins, 10s");
+xlabel('Interaction peak voltage (mV)');
+ylabel('dN/dlogmV (cm^-^3)')
+ylim([0 6000]);
+xscale log;
 % yscale log;
 grid on;
 
 %% Plot particle diameter range
 
-subplot(2,3,4);
-
-x_points = [0, 0, max(scatteringDataTable.Diameter), max(scatteringDataTable.Diameter)];  
-y_points = [min(particleInteractionsPeakHeightsChA_W), max(particleInteractionsPeakHeightsChA_W), max(particleInteractionsPeakHeightsChA_W), min(particleInteractionsPeakHeightsChA_W)];
-color = [0, 0, 1];
-
-hold on;
-a = fill(x_points, y_points, color);
-a.FaceAlpha = 0.1;
-
-plot(scatteringDataTable.Diameter,scatteringDataTable.ScatteredPower);
-grid on;
-xlabel('Particle diameter (um)');
-ylabel('Scattered power (W)');
+% subplot(2,3,4);
+% 
+% x_points = [0, 0, max(scatteringDataTable.Diameter), max(scatteringDataTable.Diameter)];  
+% y_points = [min(particleInteractionsPeakHeightsChA_W), max(particleInteractionsPeakHeightsChA_W), max(particleInteractionsPeakHeightsChA_W), min(particleInteractionsPeakHeightsChA_W)];
+% color = [0, 0, 1];
+% 
+% hold on;
+% a = fill(x_points, y_points, color);
+% a.FaceAlpha = 0.1;
+% 
+% plot(scatteringDataTable.Diameter,scatteringDataTable.ScatteredPower);
+% grid on;
+% xlabel('Particle diameter (um)');
+% ylabel('Scattered power (W)');
 
 %hold on;
 %ha = area([0 max(scatteringDataTable.Diameter)], [min(particleInteractionsPeakHeightsChA_W) max(particleInteractionsPeakHeightsChA_W)]);
@@ -454,4 +492,10 @@ ylabel('Scattered power (W)');
 %yline(min(particleInteractionsPeakHeightsChA_W));
 %yline(max(particleInteractionsPeakHeightsChA_W));
 
+%% Save figure
 
+promptAnswer = inputdlg('Enter figure name:','Enter info',[1 45],{'TestPlot'});
+filename = strcat('G:\My Drive\PCASP\Data Captures\Calibration Tests 28th March\',promptAnswer,'.png');
+
+set(gcf, 'Position', get(0, 'Screensize'));
+saveas(gcf,filename{1});
